@@ -1,0 +1,37 @@
+# VEYDOR Hydraulics
+
+> Manufacturer & exporter of reliable hydraulic valves, pumps and motors — solenoid directional valves (DSG & 4WE series), modular and relief valves, piston/vane/gear pumps. Every unit is individually pressure-tested; ISO 9001:2015 quality system; OEM/ODM welcome. Founded 2012, serving 30+ countries.
+
+Key facts:
+- Brand: VEYDOR Hydraulics (Veydor Hydraulics Co., Ltd.)
+- Product range: hydraulic valves (solenoid directional, modular, relief, manual), hydraulic pumps (piston, vane, gear), hydraulic motors
+- Quality: 100% pressure testing per unit, material traceability, batch inspection records, 12-month warranty
+- Service: quotations within 24 hours, export packing, mixed-model containers, OEM/ODM private labeling
+- Contact: email colinliyuan@gmail.com, phone/WhatsApp +86 13824423871
+
+## Products
+
+- [All Hydraulic Components](https://veydor-hydro.vercel.app/products): full catalog with categories, models (SKUs) and MOQ
+- Category hierarchy (two levels, from the wholesale backend category tree):
+  - [Hydraulic Valve](https://veydor-hydro.vercel.app/products/category/valve) — parent level
+  - [Solenoid Valve](https://veydor-hydro.vercel.app/products/category/valve/solenoid) (DSG & 4WE series)
+  - [Modular Valve](https://veydor-hydro.vercel.app/products/category/valve/modular)
+  - [Relief Valve](https://veydor-hydro.vercel.app/products/category/valve/relief)
+  - [Manual Valve](https://veydor-hydro.vercel.app/products/category/valve/manual)
+  - [Hydraulic Pump](https://veydor-hydro.vercel.app/products/category/pump) — parent level
+  - [Piston Pump](https://veydor-hydro.vercel.app/products/category/pump/piston)
+  - [Vane Pump](https://veydor-hydro.vercel.app/products/category/pump/vane)
+  - [Gear Pump](https://veydor-hydro.vercel.app/products/category/pump/gear)
+  - [Hydraulic Motor](https://veydor-hydro.vercel.app/products/category/motor)
+- Product detail pages include SKU tables, specifications and inquiry options (e.g. /products/dsg-solenoid-directional-valve-03)
+
+## Company
+
+- [Quality Control](https://veydor-hydro.vercel.app/quality): QC process, testing capabilities, certifications, FAQ
+- [About Us](https://veydor-hydro.vercel.app/about): company profile and capabilities
+- [Contact](https://veydor-hydro.vercel.app/contact): inquiry form, email, phone, WhatsApp
+
+## Notes
+
+- Product and category data is served from the VEYDOR wholesale backend and rendered server-side (SEO-friendly HTML).
+- Pricing is factory-direct and quoted per inquiry (B2B wholesale); MOQ per model, lead time 7–15 days typical.

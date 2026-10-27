@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #1f2937;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  @apply font-sans antialiased;
+}
+
+@layer components {
+  /* 站点统一容器 */
+  .container-site {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* 蓝图网格纹理(用于深蓝区块) */
+  .bg-grid {
+    background-image: linear-gradient(
+        rgba(255, 255, 255, 0.05) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* 主按钮 */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-5 py-2.5 text-sm font-semibold transition-colors;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-accent-dark;
+  }
+  .btn-outline-light {
+    @apply btn border border-white/40 text-white hover:bg-white/10;
+  }
+  .btn-outline-navy {
+    @apply btn border border-navy-800 text-navy-900 hover:bg-navy-50;
+  }
+
+  /* 区块标题 */
+  .section-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-accent;
+  }
+  .section-title {
+    @apply mt-2 text-3xl font-bold tracking-tight text-navy-900 sm:text-4xl;
+  }
+
+  /* 输入框 */
+  .input {
+    @apply w-full rounded-sm border border-steel/30 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-steel-light focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/20;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
