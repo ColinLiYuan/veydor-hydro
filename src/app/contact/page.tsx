@@ -5,6 +5,7 @@ import { InquiryForm } from "@/components/InquiryForm";
 
 export const metadata: Metadata = {
   title: "Contact Us — Get a Quote in 24 Hours",
+  alternates: { canonical: "/contact" },
   description:
     "Contact VEYDOR Hydraulics for hydraulic valve quotations, samples and technical support. Email, WhatsApp or send the inquiry form — reply within 24 hours.",
 };

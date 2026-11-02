@@ -13,6 +13,7 @@ import { site } from "@/site.config";
 
 export const metadata: Metadata = {
   title: "About Us",
+  alternates: { canonical: "/about" },
   description:
     "VEYDOR Hydraulics is a manufacturer and exporter of hydraulic valves with 10+ years of experience, serving OEMs and distributors in 30+ countries.",
 };

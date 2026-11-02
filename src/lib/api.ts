@@ -58,20 +58,53 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
 }
 
 /**
- * 分类列表。后端只接受单个分类段做前缀匹配:
- * "valve" 命中 valve 及 valve/*(父级页), "solenoid" 命中 valve/solenoid。
- * 传带 "/" 的完整路径会 400,所以这里取路径的末级段查询。
+ * 分类段归一化:去尾部复数 s、小写。用于把产品 categories 字段(单数旧数据)
+ * 与分类树 slug(复数新数据)对齐 —— 后台把树改名为复数后,产品数据仍是
+ * 单数("valve/solenoid" vs "valves/solenoid"),必须容错匹配。
+ */
+export function normalizeSegment(seg: string): string {
+  const s = seg.toLowerCase();
+  return s.length > 3 && s.endsWith("s") ? s.slice(0, -1) : s;
+}
+
+function normalizePath(path: string | string[]): string[] {
+  const segs = Array.isArray(path) ? path : path.split("/");
+  return segs.filter(Boolean).map(normalizeSegment);
+}
+
+/**
+ * 分类产品列表:后端 /products/category/{段} 的匹配规则不可靠
+ * (同样的分类数据 01 型能查到、03 型查不到,且只认旧单数 slug),
+ * 改为从全量产品(24h 缓存)本地过滤 + 容错匹配,语义由前端完全掌控:
+ * - 父级路径 ["valves"] 命中所有 valve* 产品(含子分类)
+ * - 完整路径 ["valves","solenoid"] 只命中该子分类
+ * 产品数据量小(几十个),本地过滤代价可忽略;数据缓存同 24h。
  */
 export async function getProductsByCategory(
   path: string[],
   page = 0,
   size = 12,
 ): Promise<Paged<Product>> {
-  const leaf = path[path.length - 1] ?? "";
-  const params = new URLSearchParams({ page: String(page), size: String(size) });
-  return apiFetch<Paged<Product>>(
-    `/api/v1/products/category/${encodeURIComponent(leaf)}?${params.toString()}`,
+  const all = await getAllProducts();
+  const target = normalizePath(path);
+  const filtered = all.filter((p) =>
+    parseCategories(p.categories).some((cat) => {
+      const segs = normalizePath(cat);
+      if (segs.length < target.length) return false;
+      return target.every((t, i) => segs[i] === t);
+    }),
   );
+  const totalElements = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalElements / size));
+  return {
+    content: filtered.slice(page * size, (page + 1) * size),
+    totalElements,
+    totalPages,
+    last: (page + 1) * size >= totalElements,
+    first: page === 0,
+    number: page,
+    size,
+  };
 }
 
 /**
@@ -138,11 +171,11 @@ export const getCategoryTree = cache(async (): Promise<CategoryNode[]> => {
     getAllProducts(),
   ]);
 
-  // 节点路径 -> 该节点下的产品 id 集合
+  // 节点路径(归一化)-> 该节点下的产品 id 集合
   const counts = new Map<string, Set<number>>();
   for (const p of products) {
     for (const raw of parseCategories(p.categories)) {
-      const segments = raw.split("/").filter(Boolean);
+      const segments = normalizePath(raw);
       for (let i = 0; i < segments.length; i++) {
         const nodePath = segments.slice(0, i + 1).join("/");
         const set = counts.get(nodePath) ?? new Set<number>();
@@ -163,7 +196,7 @@ export const getCategoryTree = cache(async (): Promise<CategoryNode[]> => {
           segment,
           path,
           label: n.nameEn?.trim() || prettifyCategory(segment),
-          count: counts.get(n.slug)?.size ?? 0,
+          count: counts.get(normalizePath(n.slug).join("/"))?.size ?? 0,
           children: convert(n.children ?? []),
         };
       });
@@ -189,6 +222,33 @@ export function findCategoryNode(
 /** 展开分类树的末级叶子(首页分类卡片用) */
 export function categoryLeaves(tree: CategoryNode[]): CategoryNode[] {
   return tree.flatMap((n) => (n.children.length > 0 ? n.children : [n]));
+}
+
+/**
+ * 把产品的 categories 字段(后台旧单数数据,如 "valve/solenoid")
+ * 解析成分类树里的真实路径(新复数 slug,如 ["valves","solenoid"])。
+ * 按归一化段容错匹配,取最深的匹配节点;无匹配返回 null。
+ */
+export function resolveTreePath(
+  tree: CategoryNode[],
+  category: string,
+): string[] | null {
+  const target = normalizePath(category);
+  let best: string[] | null = null;
+  const walk = (nodes: CategoryNode[]) => {
+    for (const n of nodes) {
+      const np = normalizePath(n.path);
+      if (
+        np.length <= target.length &&
+        np.every((seg, i) => seg === target[i])
+      ) {
+        if (!best || np.length > best.length) best = n.path;
+      }
+      walk(n.children);
+    }
+  };
+  walk(tree);
+  return best;
 }
 
 /** 后端图片字段可能是相对路径,补全为绝对地址 */

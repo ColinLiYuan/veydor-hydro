@@ -12,13 +12,17 @@ import {
   Tag,
 } from "lucide-react";
 import {
+  findCategoryNode,
   getAllProducts,
+  getCategoryTree,
   getProductBySlug,
   getProductsByCategory,
   imageUrl,
   parseCategories,
+  resolveTreePath,
 } from "@/lib/api";
 import type { Product } from "@/lib/types";
+import { getProductCopy } from "@/data/productContent";
 import { categoryLabel, site, whatsappLink } from "@/site.config";
 import { PlaceholderImage } from "@/components/PlaceholderImage";
 import { ProductCard } from "@/components/ProductCard";
@@ -51,14 +55,20 @@ export async function generateMetadata({
   // 在 generateMetadata 里提前 404:blocking 路由(instant=false)下若等到
   // 页面渲染再 notFound(),响应流已发出,状态码只能给 200(软 404)
   if (!product) notFound();
+  const copy = getProductCopy(product.slug);
+  const skuCount = (product.productSkus ?? []).length;
   return {
     title: product.title,
+    alternates: { canonical: `/products/${product.slug}` },
     description:
       product.shortDescription ||
-      `${product.title} — factory-direct hydraulic valve from ${site.name}. 100% pressure-tested, export packing, quotation within 24 hours.`,
+      copy?.short ||
+      `${product.title} — factory-direct hydraulic component from ${site.name}${
+        skuCount > 0 ? `, available in ${skuCount} model variants` : ""
+      }. 100% pressure-tested, export packing, quotation within 24 hours.`,
     openGraph: {
       title: product.title,
-      description: product.shortDescription ?? undefined,
+      description: product.shortDescription ?? copy?.short ?? undefined,
       images: imageUrl(product.image) ? [imageUrl(product.image)!] : undefined,
       type: "website",
     },
@@ -140,8 +150,23 @@ function KeyFacts({ product }: { product: Product }) {
   );
 }
 
-const DEFAULT_DESCRIPTION = (title: string) =>
-  `${title} is precision machined from certified materials and individually pressure-tested on calibrated test benches before shipment. Standard export packing with anti-rust treatment and full documentation. Contact us for the complete datasheet, outline drawings and a quotation within 24 hours.`;
+/**
+ * 后台 description 为空时的兜底:用真实 SKU 型号列表生成独一无二的描述,
+ * 避免全站产品页出现同一段模板文字(重复内容对 Google 收录是减分项)。
+ */
+const DEFAULT_DESCRIPTION = (product: Product) => {
+  const skus = (product.productSkus ?? []).map((s) => s.sku).filter(Boolean);
+  const preview = skus.slice(0, 6).join(", ") + (skus.length > 6 ? "…" : "");
+  const models =
+    skus.length > 0
+      ? `Available in ${skus.length} model variant${skus.length > 1 ? "s" : ""}: ${preview}.`
+      : "Multiple model variants available.";
+  const moq =
+    product.minOrder && product.minOrder > 1
+      ? ` MOQ ${product.minOrder} units.`
+      : "";
+  return `${product.title} — ${models}${moq} Factory-direct from ${site.name}: 100% pressure-tested on calibrated benches, export packing with anti-rust treatment and full documentation. Contact us for the complete datasheet, outline drawings and a quotation within 24 hours.`;
+};
 
 export default async function ProductDetailPage({
   params,
@@ -152,12 +177,15 @@ export default async function ProductDetailPage({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  // 完整分类路径,如 ["valve","solenoid"];没有分类则为空数组
-  const catPath = (parseCategories(product.categories)[0] ?? "")
-    .split("/")
-    .filter(Boolean);
+  // 分类路径:产品 categories 字段是后台旧单数数据("valve/solenoid"),
+  // 必须通过分类树解析成当前复数 slug(["valves","solenoid"]),
+  // 否则面包屑/相关产品会指向 404 的旧路径
+  const tree = await getCategoryTree();
+  const catPath =
+    resolveTreePath(tree, parseCategories(product.categories)[0] ?? "") ?? [];
   const leaf = catPath[catPath.length - 1] ?? "";
   const skus = product.productSkus.map((s) => s.sku).filter(Boolean);
+  const copy = getProductCopy(product.slug);
   const features = product.features
     ?.split(/\r?\n|;/)
     .map((f) => f.trim())
@@ -180,9 +208,12 @@ export default async function ProductDetailPage({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.title,
+    url: `${site.url}/products/${product.slug}`,
+    "@id": `${site.url}/products/${product.slug}`,
     description:
-      product.shortDescription ||
-      `${product.title} by ${site.name} — precision machined and 100% pressure-tested hydraulic valve.`,
+      copy?.long ??
+      product.shortDescription ??
+      `${product.title} by ${site.name} — precision machined and 100% pressure-tested hydraulic component.`,
     sku: skus[0] ?? undefined,
     brand: {
       "@type": "Brand",
@@ -190,16 +221,28 @@ export default async function ProductDetailPage({
     },
     category: leaf ? categoryLabel(leaf) : undefined,
     image: imageUrl(product.image) ?? undefined,
-    ...(product.currentPrice > 0
-      ? {
-          offers: {
+    // B2B 询价制,不标价;仅声明币种/库存与制造商,满足 Product 富结果基础要求
+    offers:
+      product.currentPrice > 0
+        ? {
             "@type": "Offer",
             priceCurrency: "USD",
             price: product.currentPrice,
             availability: "https://schema.org/InStock",
+          }
+        : {
+            "@type": "Offer",
+            priceCurrency: "USD",
+            availability: "https://schema.org/InStock",
+            priceSpecification: {
+              "@type": "UnitPriceSpecification",
+              priceCurrency: "USD",
+              eligibleQuantity: {
+                "@type": "QuantitativeValue",
+                minValue: product.minOrder ?? 1,
+              },
+            },
           },
-        }
-      : {}),
   };
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
@@ -215,7 +258,9 @@ export default async function ProductDetailPage({
       ...catPath.map((seg, i) => ({
         "@type": "ListItem",
         position: 3 + i,
-        name: categoryLabel(seg),
+        name:
+          findCategoryNode(tree, catPath.slice(0, i + 1))?.label ??
+          categoryLabel(seg),
         item: `${site.url}/products/category/${catPath
           .slice(0, i + 1)
           .join("/")}`,
@@ -253,7 +298,8 @@ export default async function ProductDetailPage({
                   href={`/products/category/${catPath.slice(0, i + 1).join("/")}`}
                   className="hover:text-navy-700"
                 >
-                  {categoryLabel(seg)}
+                  {findCategoryNode(tree, catPath.slice(0, i + 1))?.label ??
+                    categoryLabel(seg)}
                 </Link>
               </span>
             ))}
@@ -346,7 +392,7 @@ export default async function ProductDetailPage({
             ) : null}
 
             <p className="mt-5 text-sm leading-relaxed text-steel">
-              {product.shortDescription || DEFAULT_DESCRIPTION(product.title)}
+              {product.shortDescription || copy?.short || DEFAULT_DESCRIPTION(product)}
             </p>
 
             <div className="mt-6">
@@ -401,7 +447,7 @@ export default async function ProductDetailPage({
               Product Description
             </h2>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-steel">
-              {product.description || DEFAULT_DESCRIPTION(product.title)}
+              {product.description || copy?.long || DEFAULT_DESCRIPTION(product)}
             </p>
             {features && features.length > 0 ? (
               <>

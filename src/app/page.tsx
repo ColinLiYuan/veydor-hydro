@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   ArrowRight,
   BadgeCheck,
@@ -20,6 +21,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { site, categoryDescription } from "@/site.config";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 import { categoryLeaves, getAllProducts, getCategoryTree } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";
 import { PlaceholderImage } from "@/components/PlaceholderImage";
@@ -119,6 +124,31 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ===== 精选产品 ===== */}
+      {/* 紧跟 Hero:B2B 采购商首屏下滑即见产品,信任数字条移到其后作为背书 */}
+      <section className="bg-white py-16 sm:py-20">
+        <div className="container-site">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="section-eyebrow">Featured Products</p>
+              <h2 className="section-title">Latest Series</h2>
+            </div>
+            <Link
+              href="/products"
+              className="btn-outline-navy"
+            >
+              View All Products
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {featured.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== 信任数字 ===== */}
       <section className="border-b border-steel/10 bg-white">
         <div className="container-site grid grid-cols-2 divide-steel/10 py-10 md:grid-cols-4 md:divide-x">
@@ -179,30 +209,6 @@ export default async function HomePage() {
                 </Link>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== 精选产品 ===== */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="container-site">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="section-eyebrow">Featured Products</p>
-              <h2 className="section-title">Latest Series</h2>
-            </div>
-            <Link
-              href="/products"
-              className="btn-outline-navy"
-            >
-              View All Products
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
           </div>
         </div>
       </section>

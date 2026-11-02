@@ -59,6 +59,42 @@ body {
   .input {
     @apply w-full rounded-sm border border-steel/30 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-steel-light focus:border-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-700/20;
   }
+
+  /* 博客正文排版(blogPosts.tsx 的 JSX 正文由 blog/[slug] 页渲染) */
+  .article-body > p {
+    @apply mt-4 text-[15px] leading-relaxed text-steel;
+  }
+  .article-body h2 {
+    @apply mt-10 text-xl font-bold tracking-tight text-navy-900;
+  }
+  .article-body ul {
+    @apply mt-4 space-y-2.5;
+  }
+  .article-body li {
+    @apply relative pl-5 text-[15px] leading-relaxed text-steel;
+  }
+  .article-body li::before {
+    content: "—";
+    @apply absolute left-0 text-accent;
+  }
+  .article-body a {
+    @apply font-medium text-accent underline decoration-accent/30 underline-offset-2 hover:decoration-accent;
+  }
+  .article-body strong {
+    @apply font-semibold text-navy-900;
+  }
+  .article-body .table-wrap {
+    @apply mt-5 overflow-x-auto rounded-sm border border-steel/10;
+  }
+  .article-body table {
+    @apply w-full min-w-[520px] text-sm;
+  }
+  .article-body th {
+    @apply bg-navy-900 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-white;
+  }
+  .article-body td {
+    @apply border-t border-steel/10 px-4 py-3 text-steel;
+  }
 }
 
 @layer utilities {

@@ -17,6 +17,7 @@ import { site } from "@/site.config";
 
 export const metadata: Metadata = {
   title: "Quality Control & Certifications",
+  alternates: { canonical: "/quality" },
   description:
     "How VEYDOR guarantees hydraulic valve quality: 100% pressure testing, ISO 9001:2015 quality system, material traceability and export-grade packing.",
 };

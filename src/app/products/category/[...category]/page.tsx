@@ -38,17 +38,24 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string[] }>;
+  searchParams: Promise<{ page?: string }>;
 }): Promise<Metadata> {
   const { category: path } = await params;
+  const { page: pageParam } = await searchParams;
+  const page1 = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const leaf = path[path.length - 1] ?? "";
   const node = findCategoryNode(await getCategoryTree(), path);
   // 提前 404:blocking 路由下页面渲染阶段再 notFound() 会变成 200 软 404
   if (!node) notFound();
+  const base = `/products/category/${path.join("/")}`;
   return {
     title: node.label,
     description: `${node.label} — ${categoryDescription(leaf)} Factory-direct pricing from VEYDOR Hydraulics, 100% pressure-tested.`,
+    // 分页页 canonical 指向自身,第 1 页指向无参数 URL
+    alternates: { canonical: page1 > 1 ? `${base}?page=${page1}` : base },
   };
 }
 
@@ -75,6 +82,9 @@ export default async function CategoryPage({
   if (!node) {
     notFound();
   }
+
+  // 越界分页(如 ?page=99)直接 404,避免空结果页被收录
+  if (page1 > data.totalPages) notFound();
 
   const leaf = path[path.length - 1] ?? "";
 
