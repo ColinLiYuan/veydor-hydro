@@ -12,6 +12,12 @@
   ],
   "redirects": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "veydor-hydro.vercel.app" }],
+      "destination": "https://www.veydorhydro.com/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "veydor-hydro.vercel.app" }],
       "destination": "https://www.veydorhydro.com/:path*",
