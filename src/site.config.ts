@@ -8,7 +8,7 @@ export const site = {
   slogan: "Precision Hydraulics. Built to Last.",
   description:
     "VEYDOR Hydraulics is a manufacturer and exporter of reliable hydraulic valves, pumps, motors and components. Every unit is 100% pressure-tested before shipment, backed by ISO 9001 quality management.",
-  url: "https://veydor-hydro.vercel.app", // TODO: replace with production domain
+  url: "https://www.veydorhydro.com",
   email: "colinliyuan@gmail.com",
   phone: "+86 13824423871",
   whatsapp: "8613824423871", // digits only, for wa.me links
