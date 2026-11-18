@@ -23,24 +23,20 @@ export async function GET() {
   ]);
 
   // 分类 lastmod:该分类(含子分类)下产品的最新 updatedAt。
-  // 产品的 categories 数组可能同时含父级与子级("valve" + "valve/manual"),
-  // 逐个解析取最长的匹配路径,避免漏掉子分类
+  // 产品的 categories 数组可能含多个分类(父级 + 子级 + 别名类如 "yuken"),
+  // 每个解析成功的路径(及其所有前缀)都记录,避免漏掉任一归属分类
   const updatedByCat = new Map<string, string>();
   for (const p of products) {
     if (!p.updatedAt) continue;
-    let bestPath: string[] | null = null;
+    const iso = new Date(p.updatedAt).toISOString();
     for (const cat of parseCategories(p.categories)) {
       const resolved = resolveTreePath(categories, cat);
-      if (resolved && (!bestPath || resolved.length > bestPath.length)) {
-        bestPath = resolved;
+      if (!resolved) continue;
+      for (let i = 1; i <= resolved.length; i++) {
+        const key = resolved.slice(0, i).join("/");
+        const cur = updatedByCat.get(key);
+        if (!cur || iso > cur) updatedByCat.set(key, iso);
       }
-    }
-    if (!bestPath) continue;
-    const iso = new Date(p.updatedAt).toISOString();
-    for (let i = 1; i <= bestPath.length; i++) {
-      const key = bestPath.slice(0, i).join("/");
-      const cur = updatedByCat.get(key);
-      if (!cur || iso > cur) updatedByCat.set(key, iso);
     }
   }
 
