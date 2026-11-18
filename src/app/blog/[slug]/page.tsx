@@ -8,6 +8,7 @@ import {
   getBlogPost,
 } from "@/data/blogPosts";
 import { site } from "@/site.config";
+import { og } from "@/lib/seo";
 
 export function generateStaticParams() {
   return BLOG_POSTS.map((p) => ({ slug: p.slug }));
@@ -25,11 +26,11 @@ export async function generateMetadata({
     title: post.title,
     description: post.description,
     alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: {
+    openGraph: og(`/blog/${post.slug}`, {
       title: post.title,
       description: post.description,
       type: "article",
-    },
+    }),
   };
 }
 
@@ -52,7 +53,11 @@ export default async function BlogPostPage({
     datePublished: post.date,
     dateModified: post.date,
     keywords: post.tags.join(", "),
-    author: { "@type": "Organization", name: site.name, url: site.url },
+    author: {
+      "@type": "Person",
+      name: post.author,
+      worksFor: { "@type": "Organization", name: site.name, url: site.url },
+    },
     publisher: { "@type": "Organization", name: site.name, url: site.url },
     mainEntityOfPage: `${site.url}/blog/${post.slug}`,
     inLanguage: "en",
@@ -113,6 +118,9 @@ export default async function BlogPostPage({
                 {post.title}
               </h1>
               <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-steel">
+                <span className="font-medium text-navy-900">
+                  By {post.author}
+                </span>
                 <time dateTime={post.date}>{formatPostDate(post.date)}</time>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5" />

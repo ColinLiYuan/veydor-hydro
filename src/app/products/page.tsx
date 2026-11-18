@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCategoryTree, getProducts } from "@/lib/api";
 import { ProductBrowser } from "@/components/ProductBrowser";
+import { og } from "@/lib/seo";
+import { site } from "@/site.config";
+
+const DESCRIPTION =
+  "Browse VEYDOR hydraulic valves, pumps and motors — solenoid directional valves (DSG & 4WE series), modular and relief valves, piston/vane/gear pumps. Factory-direct pricing, 100% pressure-tested, export packing.";
 
 export async function generateMetadata({
   searchParams,
@@ -10,14 +15,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { page: pageParam } = await searchParams;
   const page1 = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const canonical = page1 > 1 ? `/products?page=${page1}` : "/products";
   return {
     title: "Hydraulic Components Catalog",
-    description:
-      "Browse VEYDOR hydraulic valves, pumps and motors — solenoid directional valves (DSG & 4WE series), modular and relief valves, piston/vane/gear pumps. Factory-direct pricing, 100% pressure-tested, export packing.",
+    description: DESCRIPTION,
     // 分页页 canonical 指向自身,第 1 页指向无参数 URL
-    alternates: {
-      canonical: page1 > 1 ? `/products?page=${page1}` : "/products",
-    },
+    alternates: { canonical },
+    openGraph: og(canonical, {
+      title: "Hydraulic Components Catalog | VEYDOR Hydraulics",
+      description: DESCRIPTION,
+    }),
   };
 }
 
@@ -49,8 +56,32 @@ export default async function ProductsPage({
   // 越界分页(如 ?page=99)直接 404,避免空结果页被收录
   if (page1 > data.totalPages) notFound();
 
+  // 列表页结构化数据:CollectionPage + ItemList(第 1 页才带,避免分页重复)
+  const jsonLd =
+    page1 === 1
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "All Hydraulic Components",
+            url: `${site.url}/products`,
+            description: DESCRIPTION,
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            itemListElement: data.content.map((p, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: `${site.url}/products/${p.slug}`,
+            })),
+          },
+        ]
+      : undefined;
+
   return (
     <ProductBrowser
+      jsonLd={jsonLd}
       breadcrumb={[
         { label: "Home", href: "/" },
         { label: "Products" },

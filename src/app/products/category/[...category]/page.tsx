@@ -5,8 +5,9 @@ import {
   getCategoryTree,
   getProductsByCategory,
 } from "@/lib/api";
-import { categoryDescription, categoryLabel } from "@/site.config";
+import { categoryDescription, categoryLabel, site } from "@/site.config";
 import { ProductBrowser } from "@/components/ProductBrowser";
+import { og } from "@/lib/seo";
 
 const PAGE_SIZE = 12;
 
@@ -51,11 +52,17 @@ export async function generateMetadata({
   // 提前 404:blocking 路由下页面渲染阶段再 notFound() 会变成 200 软 404
   if (!node) notFound();
   const base = `/products/category/${path.join("/")}`;
+  const canonical = page1 > 1 ? `${base}?page=${page1}` : base;
+  const description = `${node.label} — ${categoryDescription(leaf)} Factory-direct pricing from VEYDOR Hydraulics, 100% pressure-tested.`;
   return {
     title: node.label,
-    description: `${node.label} — ${categoryDescription(leaf)} Factory-direct pricing from VEYDOR Hydraulics, 100% pressure-tested.`,
+    description,
     // 分页页 canonical 指向自身,第 1 页指向无参数 URL
-    alternates: { canonical: page1 > 1 ? `${base}?page=${page1}` : base },
+    alternates: { canonical },
+    openGraph: og(canonical, {
+      title: `${node.label} | VEYDOR Hydraulics`,
+      description,
+    }),
   };
 }
 
@@ -88,8 +95,55 @@ export default async function CategoryPage({
 
   const leaf = path[path.length - 1] ?? "";
 
+  // 分类页结构化数据:CollectionPage + BreadcrumbList + ItemList(仅第 1 页)
+  const base = `/products/category/${path.join("/")}`;
+  const jsonLd =
+    page1 === 1
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: node.label,
+            url: `${site.url}${base}`,
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: site.url },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Products",
+                item: `${site.url}/products`,
+              },
+              ...path.map((seg, i) => ({
+                "@type": "ListItem",
+                position: 3 + i,
+                name:
+                  findCategoryNode(tree, path.slice(0, i + 1))?.label ??
+                  categoryLabel(seg),
+                item: `${site.url}/products/category/${path
+                  .slice(0, i + 1)
+                  .join("/")}`,
+              })),
+            ],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            itemListElement: data.content.map((p, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              url: `${site.url}/products/${p.slug}`,
+            })),
+          },
+        ]
+      : undefined;
+
   return (
     <ProductBrowser
+      jsonLd={jsonLd}
       breadcrumb={[
         { label: "Home", href: "/" },
         { label: "Products", href: "/products" },

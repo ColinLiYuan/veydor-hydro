@@ -1,11 +1,17 @@
 import type { MetadataRoute } from "next";
 import { connection } from "next/server";
-import { getAllProducts, getCategoryTree } from "@/lib/api";
+import {
+  getAllProducts,
+  getCategoryTree,
+  parseCategories,
+  resolveTreePath,
+} from "@/lib/api";
 import { BLOG_POSTS } from "@/data/blogPosts";
 import { site } from "@/site.config";
 
-// 构建时间作为 lastModified 兜底(Cache Components 不允许渲染期间调 new Date())
-const BUILD_TIME = new Date();
+// 静态页内容最后实质更新日(域名迁移上线日)。不再用构建时间:
+// 构建时间会让每次部署都"全量更新"静态页,lastmod 失真
+const STATIC_LAST_MOD = new Date("2026-11-13T00:00:00Z");
 
 // 博客条目:模块级预计算(渲染期间调 new Date() 会触发 Cache Components 限制)
 const BLOG_ENTRIES: MetadataRoute.Sitemap = BLOG_POSTS.map((p) => ({
@@ -25,12 +31,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url;
 
   const staticEntries: MetadataRoute.Sitemap = [
-    { url: base, lastModified: BUILD_TIME, changeFrequency: "weekly", priority: 1 },
-    { url: `${base}/products`, lastModified: BUILD_TIME, changeFrequency: "daily", priority: 0.9 },
-    { url: `${base}/blog`, lastModified: BUILD_TIME, changeFrequency: "weekly", priority: 0.7 },
-    { url: `${base}/quality`, lastModified: BUILD_TIME, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${base}/about`, lastModified: BUILD_TIME, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${base}/contact`, lastModified: BUILD_TIME, changeFrequency: "yearly", priority: 0.6 },
+    { url: base, lastModified: STATIC_LAST_MOD, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/products`, lastModified: STATIC_LAST_MOD, changeFrequency: "daily", priority: 0.9 },
+    { url: `${base}/blog`, lastModified: STATIC_LAST_MOD, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${base}/quality`, lastModified: STATIC_LAST_MOD, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/about`, lastModified: STATIC_LAST_MOD, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${base}/contact`, lastModified: STATIC_LAST_MOD, changeFrequency: "yearly", priority: 0.6 },
   ];
 
   try {
@@ -39,13 +45,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       getCategoryTree(),
     ]);
 
+    // 分类 lastmod = 该分类(含子分类)下产品的最新 updatedAt
+    const updatedByCat = new Map<string, Date>();
+    for (const p of products) {
+      if (!p.updatedAt) continue;
+      const catPath = resolveTreePath(
+        categories,
+        parseCategories(p.categories)[0] ?? "",
+      );
+      if (!catPath) continue;
+      const d = new Date(p.updatedAt);
+      for (let i = 1; i <= catPath.length; i++) {
+        const key = catPath.slice(0, i).join("/");
+        const cur = updatedByCat.get(key);
+        if (!cur || d > cur) updatedByCat.set(key, d);
+      }
+    }
+
     // 两级分类:父级 + 子级全部入图
     const categoryEntries: MetadataRoute.Sitemap = [];
     const walk = (nodes: typeof categories) => {
       for (const node of nodes) {
         categoryEntries.push({
           url: `${base}/products/category/${node.path.join("/")}`,
-          lastModified: BUILD_TIME,
+          lastModified: updatedByCat.get(node.path.join("/")) ?? STATIC_LAST_MOD,
           changeFrequency: "weekly",
           priority: node.children.length > 0 ? 0.8 : 0.7,
         });
@@ -56,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
       url: `${base}/products/${p.slug}`,
-      lastModified: p.updatedAt ? new Date(p.updatedAt) : BUILD_TIME,
+      lastModified: p.updatedAt ? new Date(p.updatedAt) : STATIC_LAST_MOD,
       changeFrequency: "monthly",
       priority: 0.8,
     }));

@@ -24,6 +24,7 @@ import {
 import type { Product } from "@/lib/types";
 import { getProductCopy } from "@/data/productContent";
 import { categoryLabel, site, whatsappLink } from "@/site.config";
+import { og } from "@/lib/seo";
 import { PlaceholderImage } from "@/components/PlaceholderImage";
 import { ProductCard } from "@/components/ProductCard";
 import { QuoteModal } from "@/components/QuoteModal";
@@ -66,12 +67,11 @@ export async function generateMetadata({
       `${product.title} — factory-direct hydraulic component from ${site.name}${
         skuCount > 0 ? `, available in ${skuCount} model variants` : ""
       }. 100% pressure-tested, export packing, quotation within 24 hours.`,
-    openGraph: {
+    openGraph: og(`/products/${product.slug}`, {
       title: product.title,
-      description: product.shortDescription ?? copy?.short ?? undefined,
-      images: imageUrl(product.image) ? [imageUrl(product.image)!] : undefined,
-      type: "website",
-    },
+      description: product.shortDescription ?? copy?.short,
+      image: imageUrl(product.image) ?? undefined,
+    }),
   };
 }
 

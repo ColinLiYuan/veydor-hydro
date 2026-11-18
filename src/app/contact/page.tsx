@@ -2,12 +2,19 @@ import type { Metadata } from "next";
 import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { site, whatsappLink } from "@/site.config";
 import { InquiryForm } from "@/components/InquiryForm";
+import { og } from "@/lib/seo";
+
+const DESCRIPTION =
+  "Contact VEYDOR Hydraulics for hydraulic valve quotations, samples and technical support. Email, WhatsApp or send the inquiry form — reply within 24 hours.";
 
 export const metadata: Metadata = {
   title: "Contact Us — Get a Quote in 24 Hours",
+  description: DESCRIPTION,
   alternates: { canonical: "/contact" },
-  description:
-    "Contact VEYDOR Hydraulics for hydraulic valve quotations, samples and technical support. Email, WhatsApp or send the inquiry form — reply within 24 hours.",
+  openGraph: og("/contact", {
+    title: "Contact Us — Get a Quote in 24 Hours | VEYDOR Hydraulics",
+    description: DESCRIPTION,
+  }),
 };
 
 const CHANNELS = [

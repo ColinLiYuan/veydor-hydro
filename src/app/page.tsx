@@ -21,9 +21,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { site, categoryDescription } from "@/site.config";
+import { og } from "@/lib/seo";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
+  openGraph: og("/", {
+    title: `${site.name} | ${site.slogan}`,
+    description: site.description,
+  }),
 };
 import { categoryLeaves, getAllProducts, getCategoryTree } from "@/lib/api";
 import { ProductCard } from "@/components/ProductCard";

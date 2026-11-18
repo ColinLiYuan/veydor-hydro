@@ -2,12 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { BLOG_POSTS, formatPostDate } from "@/data/blogPosts";
+import { og } from "@/lib/seo";
+
+const DESCRIPTION =
+  "Buyer's guides and engineering notes on hydraulic valves and pumps: interchange cross-references, valve selection, quality control and sourcing from China.";
 
 export const metadata: Metadata = {
   title: "Hydraulic Engineering Blog — VEYDOR Hydraulics",
+  description: DESCRIPTION,
   alternates: { canonical: "/blog" },
-  description:
-    "Buyer's guides and engineering notes on hydraulic valves and pumps: interchange cross-references, valve selection, quality control and sourcing from China.",
+  openGraph: og("/blog", {
+    title: "Hydraulic Engineering Blog — VEYDOR Hydraulics",
+    description: DESCRIPTION,
+  }),
 };
 
 /** 最新的排前面 */

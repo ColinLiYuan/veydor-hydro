@@ -10,12 +10,19 @@ import {
   Wrench,
 } from "lucide-react";
 import { site } from "@/site.config";
+import { og } from "@/lib/seo";
+
+const DESCRIPTION =
+  "VEYDOR Hydraulics is a manufacturer and exporter of hydraulic valves with 10+ years of experience, serving OEMs and distributors in 30+ countries.";
 
 export const metadata: Metadata = {
   title: "About Us",
+  description: DESCRIPTION,
   alternates: { canonical: "/about" },
-  description:
-    "VEYDOR Hydraulics is a manufacturer and exporter of hydraulic valves with 10+ years of experience, serving OEMs and distributors in 30+ countries.",
+  openGraph: og("/about", {
+    title: "About Us | VEYDOR Hydraulics",
+    description: DESCRIPTION,
+  }),
 };
 
 const CAPABILITIES = [

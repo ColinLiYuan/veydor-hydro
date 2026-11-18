@@ -14,12 +14,19 @@ import {
   Timer,
 } from "lucide-react";
 import { site } from "@/site.config";
+import { og } from "@/lib/seo";
+
+const DESCRIPTION =
+  "How VEYDOR guarantees hydraulic valve quality: 100% pressure testing, ISO 9001:2015 quality system, material traceability and export-grade packing.";
 
 export const metadata: Metadata = {
   title: "Quality Control & Certifications",
+  description: DESCRIPTION,
   alternates: { canonical: "/quality" },
-  description:
-    "How VEYDOR guarantees hydraulic valve quality: 100% pressure testing, ISO 9001:2015 quality system, material traceability and export-grade packing.",
+  openGraph: og("/quality", {
+    title: "Quality Control & Certifications | VEYDOR Hydraulics",
+    description: DESCRIPTION,
+  }),
 };
 
 const QC_ICONS = [Factory, ClipboardCheck, FlaskConical, PackageCheck];

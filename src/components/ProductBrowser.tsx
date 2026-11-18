@@ -28,6 +28,7 @@ export function ProductBrowser({
   makeHref,
   categoryHref,
   totalCount,
+  jsonLd,
 }: {
   breadcrumb: { label: string; href?: string }[];
   title: string;
@@ -41,11 +42,19 @@ export function ProductBrowser({
   makeHref: (page0: number) => string;
   categoryHref: (path: string[] | null) => string;
   totalCount?: number;
+  /** 页面级 JSON-LD(CollectionPage/BreadcrumbList/ItemList),由列表页与分类页注入 */
+  jsonLd?: unknown[];
 }) {
   const empty = data.content.length === 0;
 
   return (
     <div className="bg-mist">
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      ) : null}
       {/* 页头 */}
       <div className="border-b border-steel/10 bg-white">
         <div className="container-site py-10">

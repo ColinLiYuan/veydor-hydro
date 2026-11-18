@@ -20,6 +20,8 @@ export interface BlogPost {
   date: string;
   tags: string[];
   readMinutes: number;
+  /** 真实署名(站主),BlogPosting author 用 Person + worksFor */
+  author: string;
   body: ReactNode;
 }
 
@@ -32,6 +34,7 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-10-05",
     tags: ["Solenoid Valves", "Interchange"],
     readMinutes: 7,
+    author: "Colin Li",
     body: (
       <>
         <p>
@@ -166,6 +169,7 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-10-14",
     tags: ["Relief Valves", "Circuit Design"],
     readMinutes: 6,
+    author: "Colin Li",
     body: (
       <>
         <p>
@@ -301,6 +305,7 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-10-21",
     tags: ["Pumps", "Energy Saving"],
     readMinutes: 6,
+    author: "Colin Li",
     body: (
       <>
         <p>
@@ -399,6 +404,7 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-10-28",
     tags: ["Quality Control", "Sourcing"],
     readMinutes: 5,
+    author: "Colin Li",
     body: (
       <>
         <p>
@@ -503,6 +509,7 @@ export const BLOG_POSTS: BlogPost[] = [
     date: "2026-11-02",
     tags: ["Sourcing", "Buyer Guide"],
     readMinutes: 8,
+    author: "Colin Li",
     body: (
       <>
         <p>
