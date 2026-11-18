@@ -40,15 +40,29 @@ export async function GET() {
     }
   }
 
+  // 只收录"自己或子孙分类有产品"的节点:真空分类(如 pumps/gear、motors、
+  // accessories)页面保留可访问,但不提交给 Google,避免软 404 信号
   const entries: { loc: string; lastmod: string; changefreq: string; priority: number }[] = [];
   const walk = (nodes: typeof categories) => {
     for (const node of nodes) {
-      entries.push({
-        loc: `${base}/products/category/${node.path.join("/")}`,
-        lastmod: updatedByCat.get(node.path.join("/")) ?? STATIC_LAST_MOD,
-        changefreq: "weekly",
-        priority: node.children.length > 0 ? 0.8 : 0.7,
-      });
+      const key = node.path.join("/");
+      let hasProducts = updatedByCat.has(key);
+      if (!hasProducts) {
+        for (const child of node.children) {
+          if (updatedByCat.has(child.path.join("/"))) {
+            hasProducts = true;
+            break;
+          }
+        }
+      }
+      if (hasProducts) {
+        entries.push({
+          loc: `${base}/products/category/${key}`,
+          lastmod: updatedByCat.get(key) ?? STATIC_LAST_MOD,
+          changefreq: "weekly",
+          priority: node.children.length > 0 ? 0.8 : 0.7,
+        });
+      }
       walk(node.children);
     }
   };
